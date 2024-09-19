@@ -34,7 +34,7 @@ paddle_y = HEIGHT - 50
 paddle_speed = 10
 
 # Bola
-ball_radius = 10
+ball_size = 20
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-4, 4])
@@ -71,7 +71,7 @@ def draw_paddle():
 
 # Função para desenhar a bola
 def draw_ball():
-    pygame.draw.circle(screen, WHITE, (ball_x, ball_y), ball_radius)
+    pygame.draw.rect(screen, WHITE, (ball_x, ball_y, ball_size, ball_size))
 
 # Função para desenhar os blocos
 def draw_blocks():
@@ -88,7 +88,7 @@ def draw_score():
 
 # Função para detectar colisão com a raquete
 def ball_collide_paddle():
-    return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).collidepoint(ball_x, ball_y + ball_radius)
+    return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size, ball_size))
 
 # Função principal do jogo
 running = True
@@ -110,9 +110,9 @@ while running:
     ball_y += ball_speed_y
 
     # Colisão com as paredes
-    if ball_x <= ball_radius or ball_x >= WIDTH - ball_radius:
+    if ball_x <= 0 or ball_x >= WIDTH - ball_size:
         ball_speed_x = -ball_speed_x
-    if ball_y <= ball_radius:
+    if ball_y <= 0:
         ball_speed_y = -ball_speed_y
 
     # Colisão com a raquete
@@ -139,7 +139,7 @@ while running:
     for row in blocks:
         for block in row:
             block_rect = block[0]  # Acessa o retângulo do bloco (primeiro item da tupla)
-            if block_rect.collidepoint(ball_x, ball_y - ball_radius) and not ball_return:
+            if block_rect.colliderect(pygame.Rect(ball_x, ball_y, ball_size, ball_size)) and not ball_return:
                 row.remove(block)
                 ball_speed_y = -ball_speed_y
                 ball_return = True
