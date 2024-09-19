@@ -86,6 +86,8 @@ def draw_score():
     screen.blit(score1_surface, (50, 20))
     screen.blit(lifes_surface, (WIDTH - 150, 20))
 
+count_hits = 0 # contador de acertos
+
 # Função para detectar colisão com a raquete
 def ball_collide_paddle():
     return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size, ball_size))
@@ -119,6 +121,9 @@ while running:
     if ball_collide_paddle():
         ball_return = False
         ball_speed_y = -ball_speed_y
+        count_hits += 1
+        if count_hits == 4 or count_hits == 12:
+            ball_speed_y *= 1.5
 
     # Colisão com o chão (perde vida)
     if ball_y >= HEIGHT:
