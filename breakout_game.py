@@ -143,7 +143,17 @@ while running:
                 row.remove(block)
                 ball_speed_y = -ball_speed_y
                 ball_return = True
-                score1 += 10
+                
+                # Valor da pontuação em cada bloco
+                if block[1] == YELLOW:
+                    score1 += 1
+                if block[1] == GREEN:
+                    score1 += 3
+                if block[1] == ORANGE:
+                    score1 += 5
+                if block[1] == RED:
+                    score1 += 7
+
                 break
 
     # Desenhar a tela
