@@ -38,7 +38,8 @@ ball_radius = 10
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-4, 4])
-ball_speed_y = -4
+ball_speed_y = -5
+ball_return = False
 
 # Placar e vidas
 score1 = 0
@@ -116,6 +117,7 @@ while running:
 
     # Colisão com a raquete
     if ball_collide_paddle():
+        ball_return = False
         ball_speed_y = -ball_speed_y
 
     # Colisão com o chão (perde vida)
@@ -126,7 +128,8 @@ while running:
             ball_x = WIDTH // 2
             ball_y = HEIGHT // 2
             ball_speed_x = random.choice([-4, 4])
-            ball_speed_y = -4
+            ball_speed_y = -7
+            ball_return = False
         else:
             # Game Over quando as vidas acabarem
             print("Game Over")
@@ -136,9 +139,10 @@ while running:
     for row in blocks:
         for block in row:
             block_rect = block[0]  # Acessa o retângulo do bloco (primeiro item da tupla)
-            if block_rect.collidepoint(ball_x, ball_y - ball_radius):
+            if block_rect.collidepoint(ball_x, ball_y - ball_radius) and not ball_return:
                 row.remove(block)
                 ball_speed_y = -ball_speed_y
+                ball_return = True
                 score1 += 10
                 break
 
