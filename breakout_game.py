@@ -9,9 +9,11 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+ORANGE = (255, 165, 0)
 
-# Dimensões da tela
+# Dimensões da tela ajustadas para uma altura maior
 WIDTH = 700
 HEIGHT = 850
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -38,36 +40,33 @@ ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-4, 4])
 ball_speed_y = -4
 
-# Placar
-score1 = 17  # Exemplificando a pontuação da imagem
-score2 = 0
+# Placar e vidas
+score1 = 0
+lifes = 3
 
 # Blocos
-block_rows = 5
-block_cols = 14
-block_width = WIDTH // block_cols
-block_height = 30
+block_rows = 8
+block_columns = 14
+block_width = (WIDTH - (block_columns - 1) * 5) // block_columns
+block_height = 15
+column_spacing = 5
+row_spacing = 5
+block_colors = [RED, RED, ORANGE, ORANGE, GREEN, GREEN, YELLOW, YELLOW]
 
-# Definindo os blocos com as cores em estilo arcade (verde, amarelo, vermelho)
 blocks = []
 for row in range(block_rows):
     block_row = []
-    for col in range(block_cols):
-        block_x = col * block_width
-        block_y = row * block_height + 100  # Ajuste para dar espaço ao placar
-        if row < 2:
-            block_color = RED
-        elif row < 4:
-            block_color = YELLOW
-        else:
-            block_color = GREEN
+    for col in range(block_columns):
+        block_x = col * (block_width + column_spacing)
+        block_y = row * (block_height + row_spacing) + 125
+        block_color = block_colors[row]
         block_rect = pygame.Rect(block_x, block_y, block_width, block_height)
         block_row.append((block_rect, block_color))
     blocks.append(block_row)
 
 # Função para desenhar a raquete
 def draw_paddle():
-    pygame.draw.rect(screen, WHITE, (paddle_x, paddle_y, paddle_width, paddle_height))
+    pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, paddle_width, paddle_height))
 
 # Função para desenhar a bola
 def draw_ball():
@@ -82,9 +81,9 @@ def draw_blocks():
 # Função para desenhar o placar
 def draw_score():
     score1_surface = font.render(f"{score1:03}", True, WHITE)
-    score2_surface = font.render(f"{score2:03}", True, WHITE)
+    lifes_surface = font.render(f"{lifes:03}", True, WHITE)
     screen.blit(score1_surface, (50, 20))
-    screen.blit(score2_surface, (WIDTH - 150, 20))
+    screen.blit(lifes_surface, (WIDTH - 150, 20))
 
 # Função para detectar colisão com a raquete
 def ball_collide_paddle():
@@ -119,17 +118,28 @@ while running:
     if ball_collide_paddle():
         ball_speed_y = -ball_speed_y
 
-    # Colisão com o chão (game over)
+    # Colisão com o chão (perde vida)
     if ball_y >= HEIGHT:
-        print("Game Over")
-        running = False
+        lifes -= 1  # Perde uma vida
+        if lifes > 0:
+            # Reiniciar a bola se ainda houver vidas
+            ball_x = WIDTH // 2
+            ball_y = HEIGHT // 2
+            ball_speed_x = random.choice([-4, 4])
+            ball_speed_y = -4
+        else:
+            # Game Over quando as vidas acabarem
+            print("Game Over")
+            running = False
 
-    # Colisão com os blocos
+    # Colisão com os blocos (apagar apenas o bloco atingido)
     for row in blocks:
-        for block, color in row:
-            if block.collidepoint(ball_x, ball_y - ball_radius):
-                blocks.remove(row)
+        for block in row:
+            block_rect = block[0]  # Acessa o retângulo do bloco (primeiro item da tupla)
+            if block_rect.collidepoint(ball_x, ball_y - ball_radius):
+                row.remove(block)
                 ball_speed_y = -ball_speed_y
+                score1 += 10
                 break
 
     # Desenhar a tela
@@ -137,7 +147,7 @@ while running:
     draw_paddle()
     draw_ball()
     draw_blocks()
-    draw_score()  # Desenha o placar
+    draw_score()
 
     # Atualizar a tela
     pygame.display.flip()
