@@ -1,6 +1,8 @@
 import pygame
 import random
 
+from pygame import K_DOWN
+
 # Initialize Pygame
 pygame.init()
 
@@ -12,6 +14,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
+GREY = (128, 128, 128)
 
 # Screen dimensions adjusted for greater height
 WIDTH = 700
@@ -57,10 +60,12 @@ wall_width = 15
 
 
 # sounds
-brick_sound = pygame.mixer.Sound('game-screen/sounds/soundsbrick.wav')
-paddle_sound = pygame.mixer.Sound('game-screen/sounds/soundspaddle.wav')
-wall_sound = pygame.mixer.Sound('game-screen/sounds/soundswall.wav')
+brick_sound = pygame.mixer.Sound('sounds/soundsbrick.wav')
+paddle_sound = pygame.mixer.Sound('sounds/soundspaddle.wav')
+wall_sound = pygame.mixer.Sound('sounds/soundswall.wav')
 
+# game start bool
+start_screen = True
 
 blocks = []
 for row in range(block_rows):
@@ -76,14 +81,14 @@ for row in range(block_rows):
 
 # Function to draw the paddle
 def draw_paddle():
-    pygame.draw.rect(screen, BLUE,
-                     (paddle_x, paddle_y, paddle_width, paddle_height))
+    pygame.draw.rect(screen, BLUE,(paddle_x, paddle_y, paddle_width, paddle_height))
+def draw_extended_paddle():
+    pygame.draw.rect(screen, BLUE,(0, paddle_y, WIDTH, paddle_height))
 
 
 # Function to draw the ball
 def draw_ball():
-    pygame.draw.rect(screen, WHITE,
-                     (ball_x, ball_y, ball_size + 5, ball_size))
+    pygame.draw.rect(screen, WHITE,(ball_x, ball_y, ball_size + 5, ball_size))
 
 
 # Function to draw the blocks
@@ -95,7 +100,7 @@ def draw_blocks():
 
 # Function to draw the score
 def draw_score():
-    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 80)
+    font = pygame.font.Font('text_style/SFProverbialGothic-Bold.ttf', 80)
     text = font.render(str(f"{score:03}"), 0, WHITE)
     screen.blit(text, (90, 100))
     text = font.render(str(lifes_start), 0, WHITE)
@@ -111,8 +116,9 @@ count_hits = 0  # hit counter
 
 # Function to detect collision with the paddle
 def ball_collide_paddle():
-    return (pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
-    .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
+    return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
+def ball_collide_extended_paddle():
+    return pygame.Rect(0, paddle_y, WIDTH, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
 
 
 # Main game function
@@ -122,6 +128,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            start_screen = False
 
     # Paddle movement
     keys = pygame.key.get_pressed()
@@ -146,67 +154,84 @@ while running:
             is_paddle_reduced = True
 
     # Collision with the paddle
-    if ball_collide_paddle():
-        paddle_sound.play()
-        ball_return = False
-        ball_speed_y = -ball_speed_y
-        count_hits += 1
-        if count_hits == 4 or count_hits == 12:
-            ball_speed_y *= 1.25
+    if start_screen:
+        if ball_collide_extended_paddle():
+            paddle_sound.play()
+            ball_return = False
+            ball_speed_y = -ball_speed_y
+    else:
+        if ball_collide_paddle() :
+            paddle_sound.play()
+            ball_return = False
+            ball_speed_y = -ball_speed_y
+            if not start_screen:
+                count_hits += 1
+                if count_hits == 4 or count_hits == 12:
+                    ball_speed_y *= 1.5
 
     # Collision with the floor (lose a life)
-    if ball_y >= HEIGHT:
-        lifes_start += 1
-        paddle_width = 60  # Restore paddle size to normal
-        is_paddle_reduced = False
-        if lifes_start != lifes_max:
-            # Reset the ball if there are lives left
-            ball_x = WIDTH // 2
-            ball_y = HEIGHT // 2
-            ball_speed_x = random.choice([-5, 5])
-            ball_speed_y = 3
-            ball_return = False
-        else:
-            # Game Over when lives are finished
-            print("Game Over")
-            running = False
+    if not start_screen:
+        if ball_y >= HEIGHT:
+            lifes_start += 1
+            paddle_width = 60  # Restore paddle size to normal
+            is_paddle_reduced = False
+            if lifes_start != lifes_max:
+                # Reset the ball if there are lives left
+                ball_x = WIDTH // 2
+                ball_y = HEIGHT // 2
+                ball_speed_x = random.choice([-5, 5])
+                ball_speed_y = -3
+                ball_return = False
+            else:
+                # Game Over when lives are finished
+                start_screen = True
+                ball_x = WIDTH // 2
+                ball_y = HEIGHT // 2
+                ball_speed_x = random.choice([-5, 5])
+                ball_speed_y = -3
+                ball_return = False
+
 
     # Collision with blocks (remove only the hit block)
     for row in blocks:
         for block in row:
             block_rect = block[0]  # Access the block rectangle (first item in tuple)
             if block_rect.colliderect(pygame.Rect(ball_x, ball_y, ball_size, ball_size)) and not ball_return:
-                row.remove(block)
+                if not start_screen:
+                    row.remove(block)
                 brick_sound.play()
                 ball_speed_y = -ball_speed_y
                 ball_return = True
+                if not start_screen:
+                    # Value of points for each block
+                    if block[1] == YELLOW:
+                        score += 1
+                    if block[1] == GREEN:
+                        score += 3
+                    if block[1] == ORANGE:
+                        score += 5
+                    if block[1] == RED:
+                        score += 7
 
-                # Value of points for each block
-                if block[1] == YELLOW:
-                    score += 1
-                if block[1] == GREEN:
-                    score += 3
-                if block[1] == ORANGE:
-                    score += 5
-                if block[1] == RED:
-                    score += 7
-
-                break
+                    break
 
     # Draw the screen
     screen.fill(BLACK)
-    draw_paddle()
+    if start_screen:
+        draw_extended_paddle()
+    else:
+        draw_paddle()
     draw_ball()
     draw_blocks()
     draw_score()
 
     # walls
-    pygame.draw.line(screen, WHITE, [0, 17], [WIDTH, 17], 40)  # Top
-    pygame.draw.line(screen, WHITE, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
-    pygame.draw.line(screen, WHITE, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
+    pygame.draw.line(screen, GREY, [0, 17], [WIDTH, 17], 40)  # Top
+    pygame.draw.line(screen, GREY, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
+    pygame.draw.line(screen, GREY, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
                      wall_width)  # Right wall
 
-    # blue wall elements
+    # BLUE wall elements
     pygame.draw.line(screen, BLUE, [(wall_width / 2) - 1, HEIGHT - 70 + paddle_height / 2 - 54 / 2],
                      [(wall_width / 2) - 1, HEIGHT - 90 + paddle_height / 2 - 54 / 2 + 54], wall_width)  # left
     pygame.draw.line(screen, BLUE, [(WIDTH - wall_width / 2), HEIGHT - 70 + paddle_height / 2 - 54 / 2],
