@@ -26,8 +26,8 @@ clock = pygame.time.Clock()
 
 
 # Paddle size
-paddle_width = 50
-paddle_height = 20
+paddle_width = 60
+paddle_height = 10
 paddle_x = (WIDTH - paddle_width) // 2
 paddle_y = HEIGHT - 80
 paddle_speed = 12
@@ -37,7 +37,7 @@ ball_size = 10
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-4, 4])
-ball_speed_y = -4
+ball_speed_y = 3
 ball_return = False
 
 # Score and lives
@@ -150,7 +150,7 @@ while running:
         ball_speed_y = -ball_speed_y
         count_hits += 1
         if count_hits == 4 or count_hits == 12:
-            ball_speed_y *= 1.5
+            ball_speed_y *= 1.25
 
     # Collision with the floor (lose a life)
     if ball_y >= HEIGHT:
