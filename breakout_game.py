@@ -60,9 +60,9 @@ wall_width = 15
 
 
 # sounds
-brick_sound = pygame.mixer.Sound('sounds/soundsbrick.wav')
-paddle_sound = pygame.mixer.Sound('sounds/soundspaddle.wav')
-wall_sound = pygame.mixer.Sound('sounds/soundswall.wav')
+brick_sound = pygame.mixer.Sound('game-screen/sounds/soundsbrick.wav')
+paddle_sound = pygame.mixer.Sound('game-screen/sounds/soundspaddle.wav')
+wall_sound = pygame.mixer.Sound('game-screen/sounds/soundswall.wav')
 
 # game start bool
 start_screen = True
@@ -98,11 +98,18 @@ def draw_blocks():
             pygame.draw.rect(screen, color, block)
 
 
+# Initialize variables for blinking effect
+blink_timer = 0
+blink_interval = 300  # milliseconds
+is_visible = True
+
 # Function to draw the score
 def draw_score():
-    font = pygame.font.Font('text_style/SFProverbialGothic-Bold.ttf', 80)
-    text = font.render(str(f"{score:03}"), 0, WHITE)
-    screen.blit(text, (90, 100))
+    global is_visible, blink_timer
+    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 80)
+    if is_visible:
+        text = font.render(str(f"{score:03}"), 0, WHITE)
+        screen.blit(text, (90, 100))
     text = font.render(str(lifes_start), 0, WHITE)
     screen.blit(text, (400, 40))
     text = font.render('000', 0, WHITE)
@@ -221,6 +228,13 @@ while running:
         draw_extended_paddle()
     else:
         draw_paddle()
+        
+        # Handle blinking
+        blink_timer += clock.get_time()  # Increment timer by the time since the last frame
+        if blink_timer >= blink_interval:
+            is_visible = not is_visible  # Toggle visibility
+            blink_timer = 0  # Reset the timer
+
     draw_ball()
     draw_blocks()
     draw_score()
