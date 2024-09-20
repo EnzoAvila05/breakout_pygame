@@ -33,7 +33,6 @@ paddle_height = 10
 paddle_x = (WIDTH - paddle_width) // 2
 paddle_y = HEIGHT - 80
 paddle_speed = 12
-is_paddle_reduced = False
 
 # Ball
 ball_size = 10
@@ -60,9 +59,9 @@ wall_width = 15
 
 
 # sounds
-brick_sound = pygame.mixer.Sound('game-screen/sounds/soundsbrick.wav')
-paddle_sound = pygame.mixer.Sound('game-screen/sounds/soundspaddle.wav')
-wall_sound = pygame.mixer.Sound('game-screen/sounds/soundswall.wav')
+brick_sound = pygame.mixer.Sound('sounds/soundsbrick.wav')
+paddle_sound = pygame.mixer.Sound('sounds/soundspaddle.wav')
+wall_sound = pygame.mixer.Sound('sounds/soundswall.wav')
 
 # game start bool
 start_screen = True
@@ -84,6 +83,8 @@ def draw_paddle():
     pygame.draw.rect(screen, BLUE,(paddle_x, paddle_y, paddle_width, paddle_height))
 def draw_extended_paddle():
     pygame.draw.rect(screen, BLUE,(0, paddle_y, WIDTH, paddle_height))
+def draw_top_wall():
+    pygame.draw.rect(screen, GREY, (0, 0, WIDTH, 39))
 
 
 # Function to draw the ball
@@ -97,16 +98,16 @@ def draw_blocks():
         for block, color in row:
             pygame.draw.rect(screen, color, block)
 
-
 # Initialize variables for blinking effect
 blink_timer = 0
 blink_interval = 300  # milliseconds
 is_visible = True
 
+
 # Function to draw the score
 def draw_score():
     global is_visible, blink_timer
-    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 80)
+    font = pygame.font.Font('text_style/SFProverbialGothic-Bold.ttf', 80)
     if is_visible:
         text = font.render(str(f"{score:03}"), 0, WHITE)
         screen.blit(text, (90, 100))
@@ -126,6 +127,9 @@ def ball_collide_paddle():
     return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
 def ball_collide_extended_paddle():
     return pygame.Rect(0, paddle_y, WIDTH, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
+def top_wall_collision():
+    return pygame.Rect(0, 0, WIDTH, 39).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
+
 
 
 # Main game function
@@ -156,25 +160,29 @@ while running:
     if ball_y + wall_width <= 0 - wall_width:
         ball_speed_y = -ball_speed_y
         wall_sound.play()
-        if not is_paddle_reduced:
-            paddle_width /= 2
-            is_paddle_reduced = True
+    if top_wall_collision():
+        paddle_width /= 2
 
     # Collision with the paddle
     if start_screen:
-        if ball_collide_extended_paddle():
-            paddle_sound.play()
+        if ball_collide_extended_paddle() or top_wall_collision():
+            if ball_collide_extended_paddle():
+                paddle_sound.play()
+            elif top_wall_collision():
+                wall_sound.play()
             ball_return = False
             ball_speed_y = -ball_speed_y
     else:
-        if ball_collide_paddle() :
-            paddle_sound.play()
+        if ball_collide_paddle() or top_wall_collision():
+            if ball_collide_paddle():
+                paddle_sound.play()
+            elif top_wall_collision():
+                wall_sound.play()
             ball_return = False
             ball_speed_y = -ball_speed_y
-            if not start_screen:
-                count_hits += 1
-                if count_hits == 4 or count_hits == 12:
-                    ball_speed_y *= 1.5
+            count_hits += 1
+            if count_hits == 4 or count_hits == 12:
+                ball_speed_y *= 1.5
 
     # Collision with the floor (lose a life)
     if not start_screen:
@@ -192,6 +200,7 @@ while running:
             else:
                 # Game Over when lives are finished
                 start_screen = True
+                lifes_start = 1
                 ball_x = WIDTH // 2
                 ball_y = HEIGHT // 2
                 ball_speed_x = random.choice([-5, 5])
@@ -224,17 +233,17 @@ while running:
 
     # Draw the screen
     screen.fill(BLACK)
+    draw_top_wall()
     if start_screen:
         draw_extended_paddle()
     else:
         draw_paddle()
-        
+
         # Handle blinking
         blink_timer += clock.get_time()  # Increment timer by the time since the last frame
         if blink_timer >= blink_interval:
             is_visible = not is_visible  # Toggle visibility
             blink_timer = 0  # Reset the timer
-
     draw_ball()
     draw_blocks()
     draw_score()
