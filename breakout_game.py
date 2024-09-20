@@ -84,51 +84,68 @@ initialize_blocks()
 
 # Function to draw the paddle
 def draw_paddle():
-    pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, paddle_width, paddle_height))
+    pygame.draw.rect(screen, BLUE,
+                     (paddle_x, paddle_y, paddle_width, paddle_height))
 
 
 def draw_extended_paddle():
-    pygame.draw.rect(screen, BLUE, (0, paddle_y, WIDTH, paddle_height))
+    pygame.draw.rect(screen, BLUE,
+                     (0, paddle_y, WIDTH, paddle_height))
 
 
 def draw_top_wall():
-    pygame.draw.rect(screen, WHITE, (0, 0, WIDTH, 39))
+    pygame.draw.rect(screen, WHITE,
+                     (0, 0, WIDTH, 39))
 
 def draw_walls():
     # walls
     pygame.draw.line(screen, WHITE, [0, 17], [WIDTH, 17], 40)  # Top
-    pygame.draw.line(screen, WHITE, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
-    pygame.draw.line(screen, WHITE, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
+    pygame.draw.line(screen, WHITE,
+                     [(wall_width / 2) - 1, 0],
+                     [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
+    pygame.draw.line(screen, WHITE,
+                     [(WIDTH - wall_width / 2), 0],
+                     [(WIDTH - wall_width / 2), HEIGHT],
                      wall_width)  # Right wall
 
     # BLUE wall elements
-    pygame.draw.line(screen, BLUE, [(wall_width / 2) - 1, HEIGHT - 70 + paddle_height / 2 - 54 / 2],
+    pygame.draw.line(screen, BLUE,
+                     [(wall_width / 2) - 1, HEIGHT - 70 + paddle_height / 2 - 54 / 2],
                      [(wall_width / 2) - 1, HEIGHT - 90 + paddle_height / 2 - 54 / 2 + 54], wall_width)  # left
-    pygame.draw.line(screen, BLUE, [(WIDTH - wall_width / 2), HEIGHT - 70 + paddle_height / 2 - 54 / 2],
+    pygame.draw.line(screen, BLUE,
+                     [(WIDTH - wall_width / 2), HEIGHT - 70 + paddle_height / 2 - 54 / 2],
                      [(WIDTH - wall_width / 2), HEIGHT - 90 + paddle_height / 2 - 54 / 2 + 54], wall_width)  # right
 
     # red wall elements
-    pygame.draw.line(screen, RED, [(wall_width / 2) - 1, 165],
+    pygame.draw.line(screen, RED,
+                     [(wall_width / 2) - 1, 165],
                      [(wall_width / 2) - 1, 165 + 2 * block_height + 2 * column_spacing], wall_width)  # left
-    pygame.draw.line(screen, RED, [(WIDTH - wall_width / 2), 165],
+    pygame.draw.line(screen, RED,
+                     [(WIDTH - wall_width / 2), 165],
                      [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing], wall_width)  # right
 
     # orange wall elements
-    pygame.draw.line(screen, ORANGE, [(wall_width / 2) - 1, 165 + 2 * block_height + 2 * column_spacing],
+    pygame.draw.line(screen, ORANGE,
+                     [(wall_width / 2) - 1, 165 + 2 * block_height + 2 * column_spacing],
                      [(wall_width / 2) - 1, 165 + 4 * block_height + 4 * column_spacing], wall_width)  # left
-    pygame.draw.line(screen, ORANGE, [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing],
+    pygame.draw.line(screen, ORANGE,
+                     [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing],
                      [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing], wall_width)  # right
 
     # green wall elements
-    pygame.draw.line(screen, GREEN, [(wall_width / 2) - 1, 165 + 4 * block_height + 4 * column_spacing],
+    pygame.draw.line(screen, GREEN,
+                     [(wall_width / 2) - 1, 165 + 4 * block_height + 4 * column_spacing],
                      [(wall_width / 2) - 1, 165 + 6 * block_height + 6 * column_spacing], wall_width)  # left
-    pygame.draw.line(screen, GREEN, [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing],
+    pygame.draw.line(screen, GREEN,
+                     [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing],
                      [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing], wall_width)  # right
 
     # yellow wall elements
-    pygame.draw.line(screen, YELLOW, [(wall_width / 2) - 1, 165 + 6 * block_height + 6 * column_spacing],
+    pygame.draw.line(screen, YELLOW,
+                     [(wall_width / 2) - 1, 165 + 6 * block_height + 6 * column_spacing],
                      [(wall_width / 2) - 1, 165 + 8 * block_height + 8 * column_spacing], wall_width)  # left
-    pygame.draw.line(screen, YELLOW, [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing],
+    pygame.draw.line(screen, YELLOW,
+                     [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing],
                      [(WIDTH - wall_width / 2), 165 + 8 * block_height + 8 * column_spacing], wall_width)  # right
 
 
