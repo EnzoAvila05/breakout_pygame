@@ -98,7 +98,8 @@ def draw_score():
 
 # Função para detectar colisão com a raquete
 def ball_collide_paddle():
-    return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
+    return (pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
+            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
 
 # Função principal do jogo
 running = True
