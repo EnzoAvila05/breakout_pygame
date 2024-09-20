@@ -37,7 +37,7 @@ ball_size = 10
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-5, 5])
-ball_speed_y = 5
+ball_speed_y = 3
 ball_return = False
 
 # Score and lives
@@ -163,8 +163,8 @@ while running:
             # Reset the ball if there are lives left
             ball_x = WIDTH // 2
             ball_y = HEIGHT // 2
-            ball_speed_x = random.choice([-4, 4])
-            ball_speed_y = -5
+            ball_speed_x = random.choice([-5, 5])
+            ball_speed_y = 3
             ball_return = False
         else:
             # Game Over when lives are finished
