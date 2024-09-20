@@ -1,7 +1,6 @@
 import pygame
 import random
 
-from pygame import K_DOWN
 
 # Initialize Pygame
 pygame.init()
@@ -33,13 +32,14 @@ paddle_height = 10
 paddle_x = (WIDTH - paddle_width) // 2
 paddle_y = HEIGHT - 80
 paddle_speed = 12
+is_paddle_reduced = False
 
 # Ball
 ball_size = 10
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-5, 5])
-ball_speed_y = 3
+ball_speed_y = 8
 ball_return = False
 
 # Score and lives
@@ -57,39 +57,47 @@ row_spacing = 5
 block_colors = [RED, RED, ORANGE, ORANGE, GREEN, GREEN, YELLOW, YELLOW]
 wall_width = 15
 
+# Sounds
+brick_sound = pygame.mixer.Sound('game-screen/sounds/soundsbrick.wav')
+paddle_sound = pygame.mixer.Sound('game-screen/sounds/soundspaddle.wav')
+wall_sound = pygame.mixer.Sound('game-screen/sounds/soundswall.wav')
 
-# sounds
-brick_sound = pygame.mixer.Sound('sounds/soundsbrick.wav')
-paddle_sound = pygame.mixer.Sound('sounds/soundspaddle.wav')
-wall_sound = pygame.mixer.Sound('sounds/soundswall.wav')
-
-# game start bool
+# Game start bool
 start_screen = True
 
-blocks = []
-for row in range(block_rows):
-    block_row = []
-    for col in range(block_columns):
-        block_x = col * (block_width + column_spacing)
-        block_y = row * (block_height + row_spacing) + 170
-        block_color = block_colors[row]
-        block_rect = pygame.Rect(block_x, block_y, block_width, block_height)
-        block_row.append((block_rect, block_color))
-    blocks.append(block_row)
+# Function to initialize the blocks
+def initialize_blocks():
+    global blocks
+    blocks = []
+    for row in range(block_rows):
+        block_row = []
+        for col in range(block_columns):
+            block_x = col * (block_width + column_spacing)
+            block_y = row * (block_height + row_spacing) + 170
+            block_color = block_colors[row]
+            block_rect = pygame.Rect(block_x, block_y, block_width, block_height)
+            block_row.append((block_rect, block_color))
+        blocks.append(block_row)
 
+# Initialize blocks for the first game
+initialize_blocks()
 
 # Function to draw the paddle
 def draw_paddle():
-    pygame.draw.rect(screen, BLUE,(paddle_x, paddle_y, paddle_width, paddle_height))
+    pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, paddle_width, paddle_height))
+
+
 def draw_extended_paddle():
-    pygame.draw.rect(screen, BLUE,(0, paddle_y, WIDTH, paddle_height))
+    pygame.draw.rect(screen, BLUE, (0, paddle_y, WIDTH, paddle_height))
+
+
 def draw_top_wall():
-    pygame.draw.rect(screen, GREY, (0, 0, WIDTH, 39))
+    pygame.draw.rect(screen, WHITE, (0, 0, WIDTH, 39))
 
 
 # Function to draw the ball
 def draw_ball():
-    pygame.draw.rect(screen, WHITE,(ball_x, ball_y, ball_size + 5, ball_size))
+    pygame.draw.rect(screen, WHITE, (ball_x, ball_y, ball_size + 5, ball_size))
 
 
 # Function to draw the blocks
@@ -100,14 +108,14 @@ def draw_blocks():
 
 # Initialize variables for blinking effect
 blink_timer = 0
-blink_interval = 300  # milliseconds
+blink_interval = 300
 is_visible = True
 
 
 # Function to draw the score
 def draw_score():
     global is_visible, blink_timer
-    font = pygame.font.Font('text_style/SFProverbialGothic-Bold.ttf', 80)
+    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 80)
     if is_visible:
         text = font.render(str(f"{score:03}"), 0, WHITE)
         screen.blit(text, (90, 100))
@@ -124,12 +132,18 @@ count_hits = 0  # hit counter
 
 # Function to detect collision with the paddle
 def ball_collide_paddle():
-    return pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
-def ball_collide_extended_paddle():
-    return pygame.Rect(0, paddle_y, WIDTH, paddle_height).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
-def top_wall_collision():
-    return pygame.Rect(0, 0, WIDTH, 39).colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size))
+    return (pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
+            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
 
+
+def ball_collide_extended_paddle():
+    return (pygame.Rect(0, paddle_y, WIDTH, paddle_height)
+            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
+
+
+def top_wall_collision():
+    return (pygame.Rect(0, 0, WIDTH, 39)
+            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
 
 
 # Main game function
@@ -139,7 +153,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN and lifes_start == 1 and start_screen:
+            initialize_blocks()
+            score = 0
             start_screen = False
 
     # Paddle movement
@@ -161,7 +177,10 @@ while running:
         ball_speed_y = -ball_speed_y
         wall_sound.play()
     if top_wall_collision():
-        paddle_width /= 2
+        wall_sound.play()
+        if not is_paddle_reduced:
+            paddle_width /= 2
+            is_paddle_reduced = True
 
     # Collision with the paddle
     if start_screen:
@@ -207,7 +226,6 @@ while running:
                 ball_speed_y = -3
                 ball_return = False
 
-
     # Collision with blocks (remove only the hit block)
     for row in blocks:
         for block in row:
@@ -228,7 +246,6 @@ while running:
                         score += 5
                     if block[1] == RED:
                         score += 7
-
                     break
 
     # Draw the screen
@@ -249,9 +266,9 @@ while running:
     draw_score()
 
     # walls
-    pygame.draw.line(screen, GREY, [0, 17], [WIDTH, 17], 40)  # Top
-    pygame.draw.line(screen, GREY, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
-    pygame.draw.line(screen, GREY, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
+    pygame.draw.line(screen, WHITE, [0, 17], [WIDTH, 17], 40)  # Top
+    pygame.draw.line(screen, WHITE, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
+    pygame.draw.line(screen, WHITE, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
                      wall_width)  # Right wall
 
     # BLUE wall elements
