@@ -30,13 +30,14 @@ paddle_height = 10
 paddle_x = (WIDTH - paddle_width) // 2
 paddle_y = HEIGHT - 80
 paddle_speed = 12
+is_paddle_reduced = False
 
 # Ball
 ball_size = 10
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
-ball_speed_x = random.choice([-4, 4])
-ball_speed_y = 3
+ball_speed_x = random.choice([-5, 5])
+ball_speed_y = 5
 ball_return = False
 
 # Score and lives
@@ -111,8 +112,7 @@ count_hits = 0  # hit counter
 # Function to detect collision with the paddle
 def ball_collide_paddle():
     return (pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
-    .colliderect(
-        pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
+    .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
 
 
 # Main game function
@@ -141,6 +141,9 @@ while running:
     if ball_y + wall_width <= 0 - wall_width:
         ball_speed_y = -ball_speed_y
         wall_sound.play()
+        if not is_paddle_reduced:
+            paddle_width /= 2
+            is_paddle_reduced = True
 
     # Collision with the paddle
     if ball_collide_paddle():
@@ -153,13 +156,15 @@ while running:
 
     # Collision with the floor (lose a life)
     if ball_y >= HEIGHT:
-        lifes_start += 1  # Lose a life
+        lifes_start += 1
+        paddle_width = 60  # Restore paddle size to normal
+        is_paddle_reduced = False
         if lifes_start != lifes_max:
             # Reset the ball if there are lives left
             ball_x = WIDTH // 2
             ball_y = HEIGHT // 2
             ball_speed_x = random.choice([-4, 4])
-            ball_speed_y = -7
+            ball_speed_y = -5
             ball_return = False
         else:
             # Game Over when lives are finished
