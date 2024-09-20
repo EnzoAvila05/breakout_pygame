@@ -182,6 +182,13 @@ def draw_score():
     screen.blit(text, (60, 40))
 
 
+def draw_start_message():
+    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 50)
+    message = "Press arrow key to start"
+    text = font.render(message, True, WHITE)
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2))
+
+
 count_hits = 0  # hit counter
 
 
@@ -308,6 +315,7 @@ while running:
     draw_top_wall()
     if start_screen:
         draw_extended_paddle()
+        draw_start_message()
     else:
         draw_paddle()
 
