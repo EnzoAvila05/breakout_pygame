@@ -12,7 +12,6 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
-GREY = (128, 128, 128)
 
 # Screen dimensions adjusted for greater height
 WIDTH = 700
@@ -197,9 +196,9 @@ while running:
     draw_score()
 
     # walls
-    pygame.draw.line(screen, GREY, [0, 17], [WIDTH, 17], 40)  # Top
-    pygame.draw.line(screen, GREY, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
-    pygame.draw.line(screen, GREY, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
+    pygame.draw.line(screen, WHITE, [0, 17], [WIDTH, 17], 40)  # Top
+    pygame.draw.line(screen, WHITE, [(wall_width / 2) - 1, 0], [(wall_width / 2) - 1, HEIGHT], wall_width)  # Left wall
+    pygame.draw.line(screen, WHITE, [(WIDTH - wall_width / 2), 0], [(WIDTH - wall_width / 2), HEIGHT],
                      wall_width)  # Right wall
 
     # blue wall elements
