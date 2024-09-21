@@ -84,9 +84,8 @@ initialize_blocks()
 
 # Function to draw the paddle
 def draw_paddle():
-    global paddle
-    paddle = pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
-    pygame.draw.rect(screen, BLUE, paddle)
+    pygame.draw.rect(screen, BLUE,
+                     (paddle_x, paddle_y, paddle_width, paddle_height))
 
 
 def draw_extended_paddle():
@@ -153,9 +152,7 @@ def draw_walls():
 
 # Function to draw the ball
 def draw_ball():
-    global ball
-    ball = pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)
-    pygame.draw.rect(screen, WHITE, ball)
+    pygame.draw.rect(screen, WHITE, (ball_x, ball_y, ball_size + 5, ball_size))
 
 
 # Function to draw the blocks
@@ -260,16 +257,10 @@ while running:
         if ball_collide_paddle() or top_wall_collision():
             if ball_collide_paddle():
                 paddle_sound.play()
-
-                if ball.bottom >= paddle.top or ball.top <= paddle.bottom: # colisão vertical
-                    ball_speed_y *= -1
-                if ball.right >= paddle.left or ball.left <= paddle.right: # colisão horizontal
-                    ball_speed_x *= -1
-                    
             elif top_wall_collision():
-                ball_speed_y *= -1
                 wall_sound.play()
             ball_return = False
+            ball_speed_y = -ball_speed_y
             count_hits += 1
             if count_hits == 4 or count_hits == 12:
                 ball_speed_y *= 1.5
