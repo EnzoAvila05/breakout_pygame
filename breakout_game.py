@@ -10,7 +10,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+BLUE = (0, 127, 230)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
@@ -39,7 +39,7 @@ ball_size = 10
 ball_x = WIDTH // 2
 ball_y = HEIGHT // 2
 ball_speed_x = random.choice([-5, 5])
-ball_speed_y = 8
+ball_speed_y = 5
 ball_return = False
 
 # Score and lives
@@ -263,20 +263,20 @@ while running:
             ball_speed_y = -ball_speed_y
             count_hits += 1
             if count_hits == 4 or count_hits == 12:
-                ball_speed_y *= 1.5
+                ball_speed_y *= 1.25
 
     # Collision with the floor (lose a life)
     if not start_screen:
         if ball_y >= HEIGHT:
             lifes_start += 1
-            paddle_width = 60  # Restore paddle size to normal
+            paddle_width = 60
             is_paddle_reduced = False
             if lifes_start != lifes_max:
                 # Reset the ball if there are lives left
                 ball_x = WIDTH // 2
                 ball_y = HEIGHT // 2
                 ball_speed_x = random.choice([-5, 5])
-                ball_speed_y = -3
+                ball_speed_y = -5
                 ball_return = False
             else:
                 # Game Over when lives are finished
@@ -285,14 +285,15 @@ while running:
                 ball_x = WIDTH // 2
                 ball_y = HEIGHT // 2
                 ball_speed_x = random.choice([-5, 5])
-                ball_speed_y = -3
+                ball_speed_y = -5
                 ball_return = False
 
     # Collision with blocks (remove only the hit block)
     for row in blocks:
         for block in row:
-            block_rect = block[0]  # Access the block rectangle (first item in tuple)
-            if block_rect.colliderect(pygame.Rect(ball_x, ball_y, ball_size, ball_size)) and not ball_return:
+            block_rect = block[0]
+            if (block_rect.colliderect
+                (pygame.Rect(ball_x, ball_y, ball_size, ball_size)) and not ball_return):
                 if not start_screen:
                     row.remove(block)
                 brick_sound.play()
@@ -320,10 +321,10 @@ while running:
         draw_paddle()
 
         # Handle blinking
-        blink_timer += clock.get_time()  # Increment timer by the time since the last frame
+        blink_timer += clock.get_time()
         if blink_timer >= blink_interval:
-            is_visible = not is_visible  # Toggle visibility
-            blink_timer = 0  # Reset the timer
+            is_visible = not is_visible
+            blink_timer = 0
     draw_ball()
     draw_blocks()
     draw_score()
