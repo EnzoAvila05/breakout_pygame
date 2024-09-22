@@ -27,12 +27,13 @@ clock = pygame.time.Clock()
 
 
 # Paddle size
-paddle_width = 600
+paddle_width = 60
 paddle_height = 10
 paddle_x = (WIDTH - paddle_width) // 2
 paddle_y = HEIGHT - 80
 paddle_speed = 12
 is_paddle_reduced = False
+section_width = paddle_width // 4
 
 # Ball
 ball_size = 10
@@ -110,7 +111,6 @@ def draw_walls():
                      [(WIDTH - wall_width / 2), 0],
                      [(WIDTH - wall_width / 2), HEIGHT],
                      wall_width)
-
     # BLUE wall elements
     pygame.draw.line(screen, BLUE,
                      [(wall_width / 2) - 1, HEIGHT - 70 + paddle_height / 2 - 54 / 2],
@@ -118,7 +118,6 @@ def draw_walls():
     pygame.draw.line(screen, BLUE,
                      [(WIDTH - wall_width / 2), HEIGHT - 70 + paddle_height / 2 - 54 / 2],
                      [(WIDTH - wall_width / 2), HEIGHT - 90 + paddle_height / 2 - 54 / 2 + 54], wall_width)
-
     # red wall elements
     pygame.draw.line(screen, RED,
                      [(wall_width / 2) - 1, 165],
@@ -126,7 +125,6 @@ def draw_walls():
     pygame.draw.line(screen, RED,
                      [(WIDTH - wall_width / 2), 165],
                      [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing], wall_width)
-
     # orange wall elements
     pygame.draw.line(screen, ORANGE,
                      [(wall_width / 2) - 1, 165 + 2 * block_height + 2 * column_spacing],
@@ -134,7 +132,6 @@ def draw_walls():
     pygame.draw.line(screen, ORANGE,
                      [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing],
                      [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing], wall_width)
-
     # green wall elements
     pygame.draw.line(screen, GREEN,
                      [(wall_width / 2) - 1, 165 + 4 * block_height + 4 * column_spacing],
@@ -142,7 +139,6 @@ def draw_walls():
     pygame.draw.line(screen, GREEN,
                      [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing],
                      [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing], wall_width)
-
     # yellow wall elements
     pygame.draw.line(screen, YELLOW,
                      [(wall_width / 2) - 1, 165 + 6 * block_height + 6 * column_spacing],
@@ -150,7 +146,6 @@ def draw_walls():
     pygame.draw.line(screen, YELLOW,
                      [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing],
                      [(WIDTH - wall_width / 2), 165 + 8 * block_height + 8 * column_spacing], wall_width)
-
 
 
 # Function to draw the ball
@@ -197,8 +192,23 @@ count_hits = 0  # hit counter
 
 # Function to detect collision with the paddle
 def ball_collide_paddle():
-    return (pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
-            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
+    global ball_speed_x, ball_speed_y
+    paddle_rect = pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
+    ball_rect = pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)
+
+    if paddle_rect.colliderect(ball_rect):
+        relative_x = ball_x - paddle_x
+
+        if relative_x < section_width:
+            print("Collided with Section 1")
+            ball_speed_x = -abs(ball_speed_x)
+        elif relative_x >= 3 * section_width:
+            print("Collided with Section 4")
+            ball_speed_x = abs(ball_speed_x)
+
+        ball_speed_y = -ball_speed_y
+        return True
+    return False
 
 
 def ball_collide_extended_paddle():
