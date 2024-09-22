@@ -200,10 +200,8 @@ def ball_collide_paddle():
         relative_x = ball_x - paddle_x
 
         if relative_x < section_width:
-            print("Collided with Section 1")
             ball_speed_x = -abs(ball_speed_x)
         elif relative_x >= 3 * section_width:
-            print("Collided with Section 4")
             ball_speed_x = abs(ball_speed_x)
 
         ball_speed_y = -ball_speed_y
