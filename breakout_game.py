@@ -59,7 +59,7 @@ block_height = 15
 column_spacing = 5
 row_spacing = 5
 block_colors = [RED, RED, ORANGE, ORANGE, GREEN, GREEN, YELLOW, YELLOW]
-wall_width = 15
+wall_width = 10
 
 # Sounds
 brick_sound = pygame.mixer.Sound('assets/sounds/soundsbrick.wav')
@@ -307,6 +307,7 @@ while running:
                 ball_return = False
 
     # Collision with blocks (remove only the hit block)
+    global blocks
     for row in blocks:
         for block in row:
             block_rect = block[0]
