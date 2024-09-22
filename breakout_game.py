@@ -62,9 +62,9 @@ block_colors = [RED, RED, ORANGE, ORANGE, GREEN, GREEN, YELLOW, YELLOW]
 wall_width = 15
 
 # Sounds
-brick_sound = pygame.mixer.Sound('game-screen/sounds/soundsbrick.wav')
-paddle_sound = pygame.mixer.Sound('game-screen/sounds/soundspaddle.wav')
-wall_sound = pygame.mixer.Sound('game-screen/sounds/soundswall.wav')
+brick_sound = pygame.mixer.Sound('assets/sounds/soundsbrick.wav')
+paddle_sound = pygame.mixer.Sound('assets/sounds/soundspaddle.wav')
+wall_sound = pygame.mixer.Sound('assets/sounds/soundswall.wav')
 
 # Game start bool
 start_screen = True
@@ -168,7 +168,7 @@ is_visible = True
 # Function to draw the score
 def draw_score():
     global is_visible, blink_timer
-    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 80)
+    font = pygame.font.Font('assets/text_style/SFProverbialGothic-Bold.ttf', 80)
     if is_visible:
         text = font.render(str(f"{score:03}"), 0, WHITE)
         screen.blit(text, (90, 100))
@@ -181,7 +181,7 @@ def draw_score():
 
 
 def draw_start_message():
-    font = pygame.font.Font('game-screen/text_style/SFProverbialGothic-Bold.ttf', 50)
+    font = pygame.font.Font('assets/text_style/SFProverbialGothic-Bold.ttf', 50)
     message = "Press arrow key to start"
     text = font.render(message, True, WHITE)
     screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2))
