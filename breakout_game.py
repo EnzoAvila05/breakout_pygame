@@ -1,371 +1,360 @@
-import os
 import pygame
-from pygame.locals import *
-from sys import exit
 import random
-import math
 
+
+# Initialize Pygame
 pygame.init()
-pygame.mixer.init()
 
-# Cores
-GREEN_GRASS = (34, 139, 34)  # Cor de fundo verde, semelhante à grama
+# Define colors
 WHITE = (255, 255, 255)
-BLUE_LIGHT = (0, 0, 255)
-RED = (255, 0, 0)
+GREY = (212, 210, 212)
+BLACK = (0, 0, 0)
+BLUE = (0, 97, 148)
+RED = (162, 8, 0)
+ORANGE = (183, 119, 0)
+GREEN = (0, 127, 33)
+YELLOW = (197, 199, 37)
+# Screen dimensions adjusted for greater height
+WIDTH = 700
+HEIGHT = 850
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Breakout")
 
-# Tela
-width = 1200
-height = 875
-tela = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Retro Game with Arara Player")
+# Define FPS
+FPS = 60
 clock = pygame.time.Clock()
 
-# Music and soundeffects
-sounds = 'sounds'
-pygame.mixer.music.load(os.path.join(sounds, 'backsoundtrackB.mp3'))
-pygame.mixer.music.play(-1)
-fire = pygame.mixer.Sound(os.path.join(sounds, 'fire_sound.wav'))
 
-# Player (arara)
-player_width = 40
-player_height = 60
-player_x = width // 2
-player_y = height // 2
-speed_player = 5
-player_health = 10  # Vida do jogador (máximo 10)
-arara_image = pygame.image.load('assets/arara.png')
-arara_image = pygame.transform.scale(arara_image, (player_width, player_height))
+# Paddle size
+paddle_width = 60
+paddle_height = 10
+paddle_x = (WIDTH - paddle_width) // 2
+paddle_y = HEIGHT - 80
+paddle_speed = 12
+is_paddle_reduced = False
+section_width = paddle_width // 4
 
-# Ghost State
-hit = False
-blink_timer = 0
-blink_interval = 100
+# Ball
+ball_size = 10
+ball_x = WIDTH // 2
+ball_y = HEIGHT // 2
+ball_speed_x = random.choice([-5, 5])
+ball_speed_y = 5
+ball_return = False
+orange_hit = False
+red_hit = False
+top_hit = False
+
+# Score and lives
+score = 0
+lifes_start = 1
+lifes_max = 4
+
+# Blocks
+block_rows = 8
+block_columns = 14
+block_width = (WIDTH - (block_columns - 1) * 5) // block_columns
+block_height = 15
+column_spacing = 5
+row_spacing = 5
+block_colors = [RED, RED, ORANGE, ORANGE, GREEN, GREEN, YELLOW, YELLOW]
+wall_width = 10
+
+# Sounds
+brick_sound = pygame.mixer.Sound('assets/sounds/soundsbrick.wav')
+paddle_sound = pygame.mixer.Sound('assets/sounds/soundspaddle.wav')
+wall_sound = pygame.mixer.Sound('assets/sounds/soundswall.wav')
+
+# Game start bool
+start_screen = True
+
+# Function to initialize the blocks
+def initialize_blocks():
+    global blocks
+    blocks = []
+    for row in range(block_rows):
+        block_row = []
+        for col in range(block_columns):
+            block_x = col * (block_width + column_spacing)
+            block_y = row * (block_height + row_spacing) + 170
+            block_color = block_colors[row]
+            block_rect = pygame.Rect(block_x, block_y, block_width, block_height)
+            block_row.append((block_rect, block_color))
+        blocks.append(block_row)
+
+# Initialize blocks for the first game
+initialize_blocks()
+
+# Function to draw the paddle
+def draw_paddle():
+    pygame.draw.rect(screen, BLUE,
+                     (paddle_x, paddle_y, paddle_width, paddle_height))
 
 
-# Background
-background_image = pygame.image.load('assets/background.png')
-background_image = pygame.transform.scale(background_image, (width, height))
+def draw_extended_paddle():
+    pygame.draw.rect(screen, BLUE,
+                     (0, paddle_y, WIDTH, paddle_height))
 
-# Criar máscara para o jogador
-player_mask = pygame.mask.from_surface(arara_image)
 
-# Direção do jogador
-facing_right = False  # A arara começa virada para a esquerda
+def draw_top_wall():
+    pygame.draw.rect(screen, WHITE,
+                     (0, 0, WIDTH, 39))
 
-# Mira
-aim_width = 5
-aim_height = 15
-aim_x = player_x + (player_width // 2) - (aim_width // 2)
-aim_y = player_y - aim_height
-aim_direction = K_UP
-
-# Bala do jogador (gota)
-bullet_speed = 10
-clicks = 0  # Controla a taxa de tiro
-bullets = []
-
-# Carrega e redimensiona a imagem da gota
-drop_image = pygame.image.load('assets/drop.png')
-drop_image = pygame.transform.scale(drop_image, (20, 20))  # Ajusta o tamanho da gota
-
-# Balas das árvores
-tree_bullets = []
-
-# Timer para disparos das árvores
-tree_shoot_timer = 0
-
-# Paredes ao redor das bordas da tela (todas brancas)
-walls = [
-    (0, 0, width, 20),
-    (0, height - 20, width, 20),
-    (0, 0, 20, height),
-    (width - 20, 0, 20, height)
-]
-
-# Carrega e redimensiona a imagem do fogo
-fire_image = pygame.image.load('assets/fire.png')
-fire_image = pygame.transform.scale(fire_image, (60, 60))  # Ajusta o tamanho do fogo
-
-# Carrega e redimensiona a imagem da árvore
-tree_image = pygame.image.load('assets/tree.png')
-tree_image = pygame.transform.scale(tree_image, (60, 80))  # Ajusta o tamanho da árvore
-
-# Carrega e redimensiona a imagem do lago
-lake_image = pygame.image.load('assets/lake.png')
-lake_image = pygame.transform.scale(lake_image, (100, 100))  # Ajusta o tamanho do lago
-
-# Carrega e redimensiona a imagem da fireball
-fireball_image = pygame.image.load('assets/fireball.png')
-fireball_image = pygame.transform.scale(fireball_image, (20, 20))  # Ajusta o tamanho da fireball
-
-# Criar máscara para a árvore e o lago
-tree_mask = pygame.mask.from_surface(tree_image)
-lake_mask = pygame.mask.from_surface(lake_image)
-
-# Função para verificar se uma posição está longe o suficiente de outras árvores e do centro
-def is_position_valid(x, y, positions, min_distance):
-    for pos in positions:
-        if abs(x - pos[0]) < min_distance and abs(y - pos[1]) < min_distance:
-            return False
-
-    center_x, center_y = width // 2, height // 2
-    distance_from_center = ((x - center_x) ** 2 + (y - center_y) ** 2) ** 0.5
-    if distance_from_center < 100:
-        return False
-
-    return True
-
-# Cria várias árvores em posições aleatórias para formar uma floresta, garantindo distância mínima
-tree_positions = []
-trees_on_fire = []  # Lista que indica quais árvores estão pegando fogo
-max_attempts = 1000
-min_distance_between_trees = player_height + 20
-
-while len(tree_positions) < 19:
-    attempts = 0
-    while attempts < max_attempts:
-        x = random.randint(100, width - 140)
-        y = random.randint(100, height - 160)
-        if is_position_valid(x, y, tree_positions, min_distance=min_distance_between_trees):
-            tree_positions.append((x, y))
-            trees_on_fire.append(True)  # Todas as árvores começam pegando fogo
-            break
-        attempts += 1
-
-# Carrega o background
-def load_background():
-    tela.blit(background_image, (0, 0))
-
-# Cria lagos em posições aleatórias garantindo que não colidam com árvores
-lake_positions = []
-while len(lake_positions) < 3:
-    attempts = 0
-    while attempts < max_attempts:
-        x = random.randint(20, width - 120)
-        y = random.randint(20, height - 120)
-        # Garantir que os lagos não estejam na mesma posição das árvores
-        if is_position_valid(x, y, tree_positions, min_distance=150) and is_position_valid(x, y, lake_positions, min_distance=150):
-            lake_positions.append((x, y))
-            break
-        attempts += 1
-
-# Desenha o jogador (arara) usando imagem
-def draw_player():
-    global aim
-    if not hit:
-        if facing_right:
-            arara = pygame.transform.flip(arara_image, True, False)
-        else:
-            arara = arara_image
-        tela.blit(arara, (player_x, player_y))
-    # Mira do jogador
-    if aim_direction == K_RIGHT:
-        aim = pygame.draw.rect(tela, WHITE, (player_x + 35, player_y + 20, aim_height, aim_width))
-    elif aim_direction == K_LEFT:
-        aim = pygame.draw.rect(tela, WHITE, (player_x - 15, player_y + 20, aim_height, aim_width))
-    elif aim_direction == K_UP:
-        aim = pygame.draw.rect(tela, WHITE, (aim_x, aim_y, aim_width, aim_height))
-    elif aim_direction == K_DOWN:
-        aim = pygame.draw.rect(tela, WHITE, (aim_x, aim_y + player_height, aim_width, aim_height))
-
-# Desenha as paredes ao redor da tela
 def draw_walls():
-    for wall in walls:
-        pygame.draw.rect(tela, WHITE, wall)
-
-# Desenha as balas do jogador com a imagem da gota (sem ajuste de ângulo)
-def draw_bullet(bullet):
-    rect = drop_image.get_rect(center=(bullet[0], bullet[1]))
-    tela.blit(drop_image, rect.topleft)
-
-# Desenha as balas das árvores com a imagem da fireball e rotação ajustada
-def draw_tree_bullet(tree_bullet):
-    angle = math.degrees(math.atan2(-tree_bullet[3], tree_bullet[2])) + 180
-    rotated_fireball = pygame.transform.rotate(fireball_image, angle)
-    rect = rotated_fireball.get_rect(center=(tree_bullet[0], tree_bullet[1]))
-    tela.blit(rotated_fireball, rect.topleft)
-
-# Desenha as árvores e o fogo sobrepondo o topo de cada árvore
-def draw_forest_with_fire():
-    for i, pos in enumerate(tree_positions):
-        tela.blit(tree_image, pos)
-        if trees_on_fire[i]:
-            fire_x = pos[0]
-            fire_y = pos[1] - 20
-            tela.blit(fire_image, (fire_x, fire_y))
-
-# Desenha os lagos
-def draw_lakes():
-    for pos in lake_positions:
-        tela.blit(lake_image, pos)
-
-# Desenha a barra de vida do jogador
-def draw_health_bar():
-    bar_width = 200
-    bar_height = 20
-    health_ratio = player_health / 10
-    current_bar_width = bar_width * health_ratio
-
-    pygame.draw.rect(tela, RED, (20, 20, bar_width, bar_height))
-    pygame.draw.rect(tela, BLUE_LIGHT, (20, 20, current_bar_width, bar_height))
-
-
-# Atualiza a posição das balas do jogador
-def update_bullets():
-    for bullet in bullets[:]:
-        bullet[0] += bullet[2]
-        bullet[1] += bullet[3]
-        bullet_rect = pygame.Rect(bullet[0] - 10, bullet[1] - 10, 20, 20)
-
-        # Verifica colisão da bala com árvores
-        for i, pos in enumerate(tree_positions):
-            tree_rect = pygame.Rect(pos[0], pos[1], 60, 80)
-
-            if bullet_rect.colliderect(tree_rect) and trees_on_fire[i]:
-                trees_on_fire[i] = False
-                bullets.remove(bullet)
-                break
-
-        if bullet[1] < 0 or bullet[1] > height or bullet[0] < 0 or bullet[0] > width:
-            bullets.remove(bullet)
-
-# Atualiza a posição das balas das árvores
-def update_tree_bullets():
-    global player_health, player_x, player_y, hit
-    for tree_bullet in tree_bullets[:]:
-        tree_bullet[0] += tree_bullet[2]
-        tree_bullet[1] += tree_bullet[3]
-        tree_bullet_rect = pygame.Rect(tree_bullet[0] - 10, tree_bullet[1] - 10, 20, 20)
-
-        # Verificar colisão da bala com o jogador
-        player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
-        if tree_bullet_rect.colliderect(player_rect) and not hit:
-            hit = True
-            tree_bullets.remove(tree_bullet)
-            pygame.mixer.Sound.play(fire)
-            pygame.mixer.Sound.fadeout(fire,2000)
-            if hit:
-                player_health -= 1
-            if player_health <= 0:
-                # Reiniciar o jogo quando a vida do jogador for 0
-                player_x = width // 2
-                player_y = height // 2
-                player_health = 10
-                bullets.clear()
-                tree_bullets.clear()
-                trees_on_fire[:] = [True] * len(trees_on_fire)
-                break
-
-        if tree_bullet[0] < 0 or tree_bullet[0] > width or tree_bullet[1] < 0 or tree_bullet[1] > height:
-            tree_bullets.remove(tree_bullet)
+    # walls
+    pygame.draw.line(screen, WHITE, [0, 17], [WIDTH, 17], 40)  # Top
+    pygame.draw.line(screen, WHITE,
+                     [(wall_width / 2) - 1, 0],
+                     [(wall_width / 2) - 1, HEIGHT], wall_width)
+    pygame.draw.line(screen, WHITE,
+                     [(WIDTH - wall_width / 2), 0],
+                     [(WIDTH - wall_width / 2), HEIGHT],
+                     wall_width)
+    # BLUE wall elements
+    pygame.draw.line(screen, BLUE,
+                     [(wall_width / 2) - 1, HEIGHT - 70 + paddle_height / 2 - 54 / 2],
+                     [(wall_width / 2) - 1, HEIGHT - 90 + paddle_height / 2 - 54 / 2 + 54], wall_width)
+    pygame.draw.line(screen, BLUE,
+                     [(WIDTH - wall_width / 2), HEIGHT - 70 + paddle_height / 2 - 54 / 2],
+                     [(WIDTH - wall_width / 2), HEIGHT - 90 + paddle_height / 2 - 54 / 2 + 54], wall_width)
+    # red wall elements
+    pygame.draw.line(screen, RED,
+                     [(wall_width / 2) - 1, 165],
+                     [(wall_width / 2) - 1, 165 + 2 * block_height + 2 * column_spacing], wall_width)
+    pygame.draw.line(screen, RED,
+                     [(WIDTH - wall_width / 2), 165],
+                     [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing], wall_width)
+    # orange wall elements
+    pygame.draw.line(screen, ORANGE,
+                     [(wall_width / 2) - 1, 165 + 2 * block_height + 2 * column_spacing],
+                     [(wall_width / 2) - 1, 165 + 4 * block_height + 4 * column_spacing], wall_width)
+    pygame.draw.line(screen, ORANGE,
+                     [(WIDTH - wall_width / 2), 165 + 2 * block_height + 2 * column_spacing],
+                     [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing], wall_width)
+    # green wall elements
+    pygame.draw.line(screen, GREEN,
+                     [(wall_width / 2) - 1, 165 + 4 * block_height + 4 * column_spacing],
+                     [(wall_width / 2) - 1, 165 + 6 * block_height + 6 * column_spacing], wall_width)
+    pygame.draw.line(screen, GREEN,
+                     [(WIDTH - wall_width / 2), 165 + 4 * block_height + 4 * column_spacing],
+                     [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing], wall_width)
+    # yellow wall elements
+    pygame.draw.line(screen, YELLOW,
+                     [(wall_width / 2) - 1, 165 + 6 * block_height + 6 * column_spacing],
+                     [(wall_width / 2) - 1, 165 + 8 * block_height + 8 * column_spacing], wall_width)
+    pygame.draw.line(screen, YELLOW,
+                     [(WIDTH - wall_width / 2), 165 + 6 * block_height + 6 * column_spacing],
+                     [(WIDTH - wall_width / 2), 165 + 8 * block_height + 8 * column_spacing], wall_width)
 
 
-# Loop principal do jogo
-while True:
-    clock.tick(60)
+# Function to draw the ball
+def draw_ball():
+    pygame.draw.rect(screen, WHITE, (ball_x, ball_y, ball_size + 5, ball_size))
+
+
+# Function to draw the blocks
+def draw_blocks():
+    for row in blocks:
+        for block, color in row:
+            pygame.draw.rect(screen, color, block)
+
+# Initialize variables for blinking effect
+blink_timer = 0
+blink_interval = 300
+is_visible = True
+
+
+# Function to draw the score
+def draw_score():
+    global is_visible, blink_timer
+    font = pygame.font.Font('assets/text_style/SFProverbialGothic-Bold.ttf', 80)
+    if is_visible:
+        text = font.render(str(f"{score:03}"), 0, WHITE)
+        screen.blit(text, (90, 100))
+    text = font.render(str(lifes_start), 0, WHITE)
+    screen.blit(text, (400, 40))
+    text = font.render('000', 0, WHITE)
+    screen.blit(text, (440, 100))
+    text = font.render('1', 0, WHITE)
+    screen.blit(text, (60, 40))
+
+
+def draw_start_message():
+    font = pygame.font.Font('assets/text_style/SFProverbialGothic-Bold.ttf', 50)
+    message = "Press arrow key to start"
+    text = font.render(message, True, WHITE)
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2))
+
+
+count_hits = 0  # hit counter
+
+
+# Function to detect collision with the paddle
+def ball_collide_paddle():
+    global ball_speed_x, ball_speed_y
+    paddle_rect = pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
+    ball_rect = pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)
+
+    if paddle_rect.colliderect(ball_rect):
+        relative_x = ball_x - paddle_x
+
+        if relative_x < section_width:
+            ball_speed_x = -abs(ball_speed_x)
+        elif relative_x >= 3 * section_width:
+            ball_speed_x = abs(ball_speed_x)
+
+        ball_speed_y = -ball_speed_y
+        return True
+    return False
+
+def ball_collide_extended_paddle():
+    return (pygame.Rect(0, paddle_y, WIDTH, paddle_height)
+            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
+
+
+def top_wall_collision():
+    return (pygame.Rect(0, 0, WIDTH, 39)
+            .colliderect(pygame.Rect(ball_x, ball_y, ball_size + 5, ball_size)))
+
+
+# Main game function
+running = True
+while running:
+    # Game events
     for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            exit()
-        if event.type == KEYDOWN:
-            if event.key == K_SPACE:
-                clicks = 0
-            if event.key in [K_DOWN, K_UP, K_RIGHT, K_LEFT]:
-                aim_direction = event.key
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN and lifes_start == 1 and start_screen:
+            initialize_blocks()
+            score = 0
+            start_screen = False
 
-    # Movimento do player
+    # Paddle movement
     keys = pygame.key.get_pressed()
-    new_player_x = player_x
-    new_player_y = player_y
-    if keys[pygame.K_a]:
-        new_player_x -= speed_player
-        facing_right = False
-    if keys[pygame.K_d]:
-        new_player_x += speed_player
-        facing_right = True
-    if keys[pygame.K_w]:
-        new_player_y -= speed_player
-    if keys[pygame.K_s]:
-        new_player_y += speed_player
+    if keys[pygame.K_LEFT] and paddle_x > 0:
+        paddle_x -= paddle_speed
+    if keys[pygame.K_RIGHT] and paddle_x < WIDTH - paddle_width:
+        paddle_x += paddle_speed
 
-    # Limites do jogador para evitar sair da tela
-    new_player_x = max(20, min(width - player_width - 20, new_player_x))
-    new_player_y = max(20, min(height - player_height - 20, new_player_y))
+    # Ball movement
+    ball_x += ball_speed_x
+    ball_y += ball_speed_y
 
-    # Atualiza a mira
-    aim_x = new_player_x + (player_width // 2) - (aim_width // 2)
-    aim_y = new_player_y - aim_height
+    # Collision with walls
+    if ball_x <= 0 + wall_width or ball_x >= WIDTH - wall_width - ball_size:
+        ball_speed_x = -ball_speed_x
+        wall_sound.play()
+    if ball_y + wall_width <= 0 - wall_width:
+        ball_speed_y = -ball_speed_y
+        wall_sound.play()
+    if top_wall_collision():
+        wall_sound.play()
+        if not top_hit:
+            ball_speed_y *= 1.25
+            top_hit = True
+        if not is_paddle_reduced:
+            paddle_width /= 2
+            is_paddle_reduced = True
 
-    # Verifica colisões com as árvores e lagos antes de atualizar a posição do jogador
-    new_player_rect = pygame.Rect(new_player_x, new_player_y, player_width, player_height)
-    collision = False
+    # Collision with the paddle
+    if start_screen:
+        if ball_collide_extended_paddle() or top_wall_collision():
+            if ball_collide_extended_paddle():
+                paddle_sound.play()
+            elif top_wall_collision():
+                wall_sound.play()
+            ball_return = False
+            ball_speed_y = -ball_speed_y
+    else:
+        if ball_collide_paddle() or top_wall_collision():
+            if ball_collide_paddle():
+                if paddle_y < ball_y <= paddle_y + paddle_height:
+                    ball_speed_y = -10
+                paddle_sound.play()
+            elif top_wall_collision():
+                wall_sound.play()
+            ball_return = False
+            ball_speed_y = -ball_speed_y
+            count_hits += 1
+            if count_hits == 4 or count_hits == 12:
+                ball_speed_y *= 1.25
 
-    for pos in tree_positions:
-        tree_rect = pygame.Rect(pos[0], pos[1], 60, 80)
-        offset_x = new_player_rect.left - tree_rect.left
-        offset_y = new_player_rect.top - tree_rect.top
-        if tree_mask.overlap(player_mask, (offset_x, offset_y)):
-            collision = True
-            break
+    # Collision with the floor (lose a life)
+    if not start_screen:
+        if ball_y >= HEIGHT:
+            lifes_start += 1
+            paddle_width = 60
+            is_paddle_reduced = False
+            count_hits = 0
+            orange_hit = False
+            red_hit = False
+            top_hit = False
+            if lifes_start != lifes_max:
+                # Reset the ball if there are lives left
+                ball_x = WIDTH // 2
+                ball_y = HEIGHT // 2
+                ball_speed_x = random.choice([-5, 5])
+                ball_speed_y = -5
+                ball_return = False
+            else:
+                # Game Over when lives are finished
+                start_screen = True
+                lifes_start = 1
+                ball_x = WIDTH // 2
+                ball_y = HEIGHT // 2
+                ball_speed_x = random.choice([-5, 5])
+                ball_speed_y = -5
+                ball_return = False
 
-    for pos in lake_positions:
-        lake_rect = pygame.Rect(pos[0], pos[1], 100, 100)
-        offset_x = new_player_rect.left - lake_rect.left
-        offset_y = new_player_rect.top - lake_rect.top
-        if lake_mask.overlap(player_mask, (offset_x, offset_y)):
-            collision = True
-            break
+    # Collision with blocks (remove only the hit block)
+    global blocks
+    for row in blocks:
+        for block in row:
+            block_rect = block[0]
+            if (block_rect.colliderect
+                (pygame.Rect(ball_x, ball_y, ball_size, ball_size)) and not ball_return):
+                if not start_screen:
+                    row.remove(block)
+                brick_sound.play()
+                ball_speed_y = -ball_speed_y
+                ball_return = True
+                if not start_screen:
+                    # Value of points for each block
+                    if block[1] == YELLOW:
+                        score += 1
+                    if block[1] == GREEN:
+                        score += 3
+                    if block[1] == ORANGE and not orange_hit:
+                        score += 5
+                        ball_speed_y *= 1.25
+                        orange_hit = True
+                    if block[1] == RED and not red_hit:
+                        score += 7
+                        ball_speed_y *= 1.25
+                        red_hit = True
+                    break
 
-    if not collision:
-        player_x = new_player_x
-        player_y = new_player_y
+    # Draw the screen
+    screen.fill(BLACK)
+    draw_top_wall()
+    if start_screen:
+        draw_extended_paddle()
+        draw_start_message()
+    else:
+        draw_paddle()
 
-    tree_shoot_timer += clock.get_time()
-    if tree_shoot_timer >= 4000:
-        tree_shoot_timer = 0
-        for i, pos in enumerate(tree_positions):
-            if trees_on_fire[i]:
-                direction_x = player_x - pos[0]
-                direction_y = player_y - pos[1]
-                distance = math.hypot(direction_x, direction_y)
-                if distance != 0:
-                    direction_x /= distance
-                    direction_y /= distance
-                bullet_speed = 4
-                direction_x *= bullet_speed
-                direction_y *= bullet_speed
-                tree_bullets.append([pos[0] + 30, pos[1] + 40, direction_x, direction_y])
-
-    tela.fill(GREEN_GRASS)
-    load_background()
-    draw_forest_with_fire()
-    draw_lakes()
+        # Handle blinking
+        blink_timer += clock.get_time()
+        if blink_timer >= blink_interval:
+            is_visible = not is_visible
+            blink_timer = 0
+    draw_ball()
+    draw_blocks()
+    draw_score()
     draw_walls()
-    draw_player()
-    draw_health_bar()
-    update_bullets()
-    for bullet in bullets:
-        draw_bullet(bullet)
-    update_tree_bullets()
-    for tree_bullet in tree_bullets:
-        draw_tree_bullet(tree_bullet)
 
-    if keys[pygame.K_SPACE] and clicks <= 0:
-        direction_x, direction_y = 0, 0
-        if aim_direction == K_RIGHT:
-            direction_x = bullet_speed
-        elif aim_direction == K_LEFT:
-            direction_x = -bullet_speed
-        elif aim_direction == K_UP:
-            direction_y = -bullet_speed
-        elif aim_direction == K_DOWN:
-            direction_y = bullet_speed
-        bullets.append([aim.x,aim.y, direction_x, direction_y])
-        clicks += 1
+    # Update the screen
+    pygame.display.flip()
+    clock.tick(FPS)
 
-    blink_timer += clock.get_time()
-    if blink_timer >= blink_interval:
-        hit = False
-        blink_timer = 0
-    pygame.display.update()
+pygame.quit()
